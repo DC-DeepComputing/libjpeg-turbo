@@ -1258,10 +1258,12 @@ jsimd_set_idct_ifast(j_decompress_ptr cinfo)
     return JSIMD_ALTIVEC;
   }
 #elif SIMD_ARCHITECTURE == RISCV64
-  if (cinfo->master->simd_support & JSIMD_RVV) {
-    cinfo->idct->idct_simd = jsimd_idct_ifast_rvv;
-    return JSIMD_RVV;
-  }
+  /* The RVV ifast kernel is disabled: paired checkasm verification found it
+   * produces incorrect output AND clobbers caller stack memory (stores past
+   * its frame; wrong even for trivial DC-only blocks at full range margin).
+   * Fall through to the C jpeg_idct_ifast, which is also faster than the
+   * buggy kernel on SpacemiT X100.  The islow kernel is unaffected. */
+  (void)jsimd_idct_ifast_rvv;
 #elif SIMD_ARCHITECTURE == MIPS64
   if (cinfo->master->simd_support & JSIMD_MMI) {
     cinfo->idct->idct_simd = jsimd_idct_ifast_mmi;

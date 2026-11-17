@@ -486,6 +486,12 @@ if(UNIX)
     set_source_files_properties(riscv64/jsimdcpu.c PROPERTIES
       COMPILE_DEFINITIONS HAVE_GETAUXVAL)
   endif()
+  # jsimdcpu.c is compiled separately from SIMD_SOURCES, so it needs the
+  # -march flag too: without __riscv_v, jpeg_simd_cpu_support() falls back
+  # to the AT_HWCAP V bit, which some kernels (e.g. SpacemiT) never set,
+  # silently disabling all RVV kernels.
+  set_source_files_properties(riscv64/jsimdcpu.c PROPERTIES
+    COMPILE_FLAGS -march=rv64gcv)
   check_symbol_exists(elf_aux_info sys/auxv.h HAVE_ELF_AUX_INFO)
   if(HAVE_ELF_AUX_INFO)
     set_source_files_properties(riscv64/jsimdcpu.c PROPERTIES
